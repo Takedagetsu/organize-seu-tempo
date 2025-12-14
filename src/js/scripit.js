@@ -1,118 +1,42 @@
 // ==================================================================
-// 1. CONFIGURAÇÃO DE SERVIÇO NA NUVEM (PASSO CRÍTICO)
+// 1. DADOS E REFERÊNCIAS DOS ELEMENTOS DO DOM
 // ==================================================================
-
-/*
- * ATENÇÃO: PARA QUE A EDIÇÃO FUNCIONE EM MÚLTIPLOS DISPOSITIVOS,
- * ESTE PROJETO PRECISA INTERAGIR COM UM BANCO DE DADOS NA NUVEM (Ex: Firebase).
- * As funções de persistência (loadSharedTasks / saveSharedTasks) foram modificadas
- * para usar placeholders de integração assíncrona.
- *
- * PARA CONTINUAR:
- * 1. Crie um projeto no Firebase (ou Supabase).
- * 2. Configure a biblioteca Firebase no seu HTML (via CDN) ou Bundle.
- * 3. Substitua o código dentro de getTasksFromCloud, saveTasksToCloud e loadUsersData.
- */
-
-// Placeholder para o Array de Tarefas Compartilhadas
-let tasks = []; 
+let tasks = []; // Array principal que conterá TODAS as tarefas COMPARTILHADAS
 let taskIdCounter = 0; 
 let loggedInUser = null; 
-let users = {}; 
+let users = {}; // Objeto que contém os usuários para autenticação
 
-// Constantes de persistência local (Mantidas apenas para Credenciais de Usuário)
+// Constantes de persistência
 const USERS_DATA_KEY = 'takedaUsersData'; 
 
-// ==================================================================
-// 2. FUNÇÕES DE PERSISTÊNCIA NA NUVEM (PLACEHOLDERS)
-// ==================================================================
-
-/**
- * [PLACEHOLDER] Salva as tarefas no servidor (Simula uma API PUT).
- * ATENÇÃO: Substitua este código pela lógica de escrita do Firebase/API.
- */
-async function saveTasksToCloud() {
-    console.log("Simulando: Enviando dados para a Nuvem...", tasks);
-    
-    // --- LÓGICA TEMPORÁRIA: Salvando no LocalStorage para evitar perda ---
-    localStorage.setItem('SHARED_TASKS_CLOUD_SIMULATOR', JSON.stringify(tasks));
-    // --- FIM DA LÓGICA TEMPORÁRIA ---
-
-    // Exemplo de como ficaria a lógica com uma API real:
-    // await fetch('/api/tasks', { method: 'PUT', body: JSON.stringify(tasks) });
-}
-
-/**
- * [PLACEHOLDER] Carrega as tarefas do servidor (Simula uma API GET).
- * ATENÇÃO: Substitua este código pela lógica de leitura do Firebase/API.
- */
-async function getTasksFromCloud() {
-    console.log("Simulando: Baixando dados da Nuvem...");
-    
-    // --- LÓGICA TEMPORÁRIA: Carregando do LocalStorage ---
-    const storedTasks = localStorage.getItem('SHARED_TASKS_CLOUD_SIMULATOR');
-    return storedTasks ? JSON.parse(storedTasks) : [];
-    // --- FIM DA LÓGICA TEMPORÁRIA ---
-}
-
-// ==================================================================
-// 3. LÓGICA DE CARREGAMENTO E SINCRONIZAÇÃO (AJUSTADA PARA ASYNC)
-// ==================================================================
-
-async function loadSharedTasks() {
-    tasks = await getTasksFromCloud(); // Chamada assíncrona
-    
-    // Calcula o ID máximo após carregar
-    if (tasks.length > 0) {
-        const maxId = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
-        taskIdCounter = maxId;
-    } else {
-        taskIdCounter = 0;
-    }
-    renderTasksToDOM(); 
-}
-
-// O salvamento das credenciais de usuário (local) não precisa ser async:
-function saveUsersData() {
-    localStorage.setItem(USERS_DATA_KEY, JSON.stringify(users));
-}
-
-function loadUsersData() {
-    const storedData = localStorage.getItem(USERS_DATA_KEY);
-    
-    if (storedData) {
-        users = JSON.parse(storedData);
-    } else {
-        users = { 'TAKEDA': { password: '147369' } }; 
-        saveUsersData();
-    }
-}
-
-
-// ==================================================================
-// 4. REFERÊNCIAS E FUNÇÕES DE INTERFACE (Mantidas)
-// ==================================================================
-
-// Elementos de Interface (omitidos por brevidade - Mantidos da versão anterior)
+// Elementos de Interface
 const loginContent = document.getElementById('login-content');
 const appContent = document.getElementById('app-content');
 const loginForm = document.getElementById('login-form');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginMessage = document.getElementById('login-message');
+
 const userLogoffButton = document.getElementById('user-logoff-button'); 
 const loggedInDisplayName = userLogoffButton; 
+
+// Elementos Admin/Cadastro
 const adminButton = document.querySelector('.admin-only'); 
 const registerForm = document.getElementById('register-form');
 const newUsernameInput = document.getElementById('new-username');
 const newPasswordInput = document.getElementById('new-password');
 const registerMessage = document.getElementById('register-message');
 const userListElement = document.getElementById('user-list');
+
 const headerNavigationGroup = document.querySelector('.header-navigation-group');
+
+// Referências de Navegação e Conteúdo
 const navButtons = document.querySelectorAll('.nav-button');
 const contentSections = document.querySelectorAll('.content-section');
 const taskList = document.getElementById('task-list'); 
 const completedList = document.getElementById('completed-list'); 
+
+// Inputs de Adição/Modal
 const taskText = document.getElementById('task-text');
 const taskDueDate = document.getElementById('task-due-date');
 const taskPriority = document.getElementById('task-priority');
@@ -124,6 +48,8 @@ const modalPriority = document.getElementById('modal-priority');
 const modalTaskId = document.getElementById('modal-task-id');
 const saveEditBtn = document.getElementById('save-edit-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
+
+// Elementos de Pesquisa
 const searchForm = document.getElementById('search-form');
 const searchText = document.getElementById('search-text');
 const searchDate = document.getElementById('search-date');
@@ -132,9 +58,74 @@ const clearSearchBtn = document.getElementById('clear-search-btn');
 
 
 // ==================================================================
-// 5. FUNÇÕES DE RENDERIZAÇÃO E UTILS (Mantidas)
+// 2. LÓGICA DE PERSISTÊNCIA NA NUVEM (FIREBASE)
 // ==================================================================
 
+/**
+ * Salva as tarefas e credenciais de usuário no Firebase.
+ */
+async function saveTasksToCloud() {
+    // A variável global `database` é definida no index.html.
+    await database.ref('sharedTasks').set(tasks);
+    await database.ref('users').set(users);
+}
+
+/**
+ * Carrega as tarefas do Firebase.
+ */
+async function getTasksFromCloud() {
+    const tasksSnapshot = await database.ref('sharedTasks').once('value');
+    const tasksData = tasksSnapshot.val();
+    return tasksData ? tasksData : [];
+}
+
+/**
+ * Carrega a lista de usuários para autenticação (mantendo o LocalStorage para fallback rápido).
+ */
+function loadUsersData() {
+    const storedData = localStorage.getItem(USERS_DATA_KEY);
+    
+    if (storedData) {
+        users = JSON.parse(storedData);
+    } else {
+        // Tenta carregar do Firebase se não houver dados locais
+        database.ref('users').once('value').then(usersSnapshot => {
+            const usersData = usersSnapshot.val();
+            if (usersData) {
+                users = usersData;
+            } else {
+                // Inicializa o TAKEDA se não houver dados em nenhum lugar
+                users = { 'TAKEDA': { password: '147369' } }; 
+            }
+            saveUsersData(); // Salva no LocalStorage
+        }).catch(error => {
+            console.error("Erro ao carregar usuários do Firebase. Usando local.", error);
+            users = { 'TAKEDA': { password: '147369' } }; 
+            saveUsersData();
+        });
+    }
+}
+
+async function loadSharedTasks() {
+    tasks = await getTasksFromCloud();
+    
+    if (tasks.length > 0) {
+        const maxId = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
+        taskIdCounter = maxId;
+    } else {
+        taskIdCounter = 0;
+    }
+    renderTasksToDOM(); 
+}
+
+function saveUsersData() {
+    localStorage.setItem(USERS_DATA_KEY, JSON.stringify(users));
+}
+
+/**
+ * Renderiza todas as tarefas, agrupadas em colunas por prioridade (pendentes) 
+ * e em uma lista simples (concluídas).
+ */
 function renderTasksToDOM() {
     
     const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
@@ -187,6 +178,9 @@ function renderTasksToDOM() {
     renderCompletedTasks(); 
 }
 
+/**
+ * Função que aplica a pesquisa e renderiza as tarefas concluídas.
+ */
 function renderCompletedTasks() {
     const allCompletedTasks = tasks.filter(task => task.isCompleted);
     let filteredTasks = allCompletedTasks;
@@ -195,6 +189,7 @@ function renderCompletedTasks() {
     const dateFilter = searchDate.value;
     const priorityFilter = searchPriority.value;
     
+    // Aplica filtros
     if (textFilter) {
         filteredTasks = filteredTasks.filter(task => 
             task.text.toLowerCase().includes(textFilter)
@@ -202,11 +197,15 @@ function renderCompletedTasks() {
     }
 
     if (dateFilter) {
-        filteredTasks = filteredTasks.filter(task => task.date === dateFilter);
+        filteredTasks = filteredTasks.filter(task => 
+            task.date === dateFilter
+        );
     }
 
     if (priorityFilter) {
-        filteredTasks = filteredTasks.filter(task => task.priority === priorityFilter);
+        filteredTasks = filteredTasks.filter(task => 
+            task.priority === priorityFilter
+        );
     }
 
     completedList.innerHTML = ''; 
@@ -255,6 +254,8 @@ function createTaskElement(taskData) {
     const isPrincipalAdmin = (loggedInUser === 'TAKEDA');
 
     if (!isCompleted) {
+        // TAREFA PENDENTE
+        
         const completeBtn = document.createElement('button');
         completeBtn.className = 'complete-btn';
         completeBtn.textContent = 'Concluir';
@@ -268,12 +269,15 @@ function createTaskElement(taskData) {
         controlsDiv.appendChild(deleteBtn);
 
     } else {
+        // TAREFA CONCLUÍDA
+        
         const revertBtn = document.createElement('button');
         revertBtn.className = 'complete-btn'; 
         revertBtn.textContent = 'Reverter';
         revertBtn.addEventListener('click', uncompleteTask); 
         controlsDiv.appendChild(revertBtn);
         
+        // REGRA CHAVE: Exibir Excluir APENAS se for o Admin (TAKEDA)
         if (isPrincipalAdmin) {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -292,7 +296,7 @@ function createTaskElement(taskData) {
 
 
 // ==================================================================
-// 6. LÓGICA DE CADASTRO E ADMIN
+// 3. LÓGICA DE CADASTRO E ADMIN
 // ==================================================================
 
 function handleRegistration(event) {
@@ -317,6 +321,7 @@ function handleRegistration(event) {
         password: newPassword,
     };
     saveUsersData();
+    saveTasksToCloud(); // Sincroniza dados de usuário com a nuvem
     renderUserList();
 
     registerMessage.textContent = `Usuário "${newUsername}" cadastrado com sucesso!`;
@@ -402,6 +407,7 @@ async function saveUserEdit() {
     if (users[username]) {
         users[username].password = newPassword;
         saveUsersData();
+        await saveTasksToCloud(); // Sincroniza credenciais
         alert(`Senha do usuário "${username}" alterada com sucesso!`);
     }
 
@@ -409,14 +415,14 @@ async function saveUserEdit() {
     renderUserList(); 
 }
 
-function deleteUser(username) {
+async function deleteUser(username) {
     if (confirm(`Tem certeza que deseja EXCLUIR o usuário "${username}"? Todas as tarefas dele serão perdidas.`)) {
         delete users[username];
         saveUsersData();
         
-        // Remove as tarefas dele do array compartilhado e salva na nuvem
         tasks = tasks.filter(task => task.lastModifiedBy !== username);
-        saveTasksToCloud(); 
+        
+        await saveTasksToCloud(); // Sincroniza exclusão de usuário/tarefas na nuvem
         
         renderUserList();
         renderTasksToDOM(); 
@@ -436,7 +442,7 @@ function resetAndCloseUserModal() {
 
 
 // ==================================================================
-// 7. FUNÇÕES DE AUTENTICAÇÃO E CRUD (AJUSTADAS PARA ASYNC)
+// 4. FUNÇÕES DE AUTENTICAÇÃO E CRUD (AJUSTADAS PARA ASYNC)
 // ==================================================================
 
 function handleLogin(event) {
@@ -466,7 +472,7 @@ function handleLogin(event) {
     loggedInDisplayName.textContent = `${loggedInUser} (Sair)`;
     loggedInDisplayName.style.display = 'block';
 
-    loadSharedTasks(); // Carrega dados da "nuvem"
+    loadSharedTasks(); 
     
     checkAdminVisibility();
     renderUserList();
@@ -552,7 +558,7 @@ async function saveEdit() {
     tasks[taskIndex].lastModifiedBy = loggedInUser; 
     tasks[taskIndex].lastModifiedDate = new Date().toLocaleString('pt-BR');
 
-    await saveTasksToCloud(); // Sincroniza com a nuvem
+    await saveTasksToCloud(); 
     renderTasksToDOM(); 
     
     closeEditModal();
@@ -583,7 +589,7 @@ async function addTask() {
 
     tasks.push(newTaskData);
 
-    await saveTasksToCloud(); // Sincroniza com a nuvem
+    await saveTasksToCloud(); 
     renderTasksToDOM(); 
 
     taskText.value = '';
@@ -603,7 +609,7 @@ async function completeTask(event) {
         task.lastModifiedDate = new Date().toLocaleString('pt-BR');
     }
     
-    await saveTasksToCloud(); // Sincroniza com a nuvem
+    await saveTasksToCloud(); 
     renderTasksToDOM(); 
 }
 
@@ -617,7 +623,7 @@ async function uncompleteTask(event) {
         task.lastModifiedDate = new Date().toLocaleString('pt-BR');
     }
     
-    await saveTasksToCloud(); // Sincroniza com a nuvem
+    await saveTasksToCloud(); 
     renderTasksToDOM(); 
 }
 
@@ -626,7 +632,6 @@ async function deleteTask(event) {
     const taskId = parseInt(taskItem.id.replace('task-', ''));
     const task = tasks.find(t => t.id === taskId);
 
-    // REGRA CHAVE: Se a tarefa está concluída, verifica se o usuário é o Admin
     if (task.isCompleted && loggedInUser !== 'TAKEDA') {
         alert("Apenas a conta principal (TAKEDA) pode excluir tarefas concluídas.");
         return; 
@@ -637,7 +642,7 @@ async function deleteTask(event) {
     if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
         tasks = tasks.filter(t => t.id !== taskId);
         
-        await saveTasksToCloud(); // Sincroniza com a nuvem
+        await saveTasksToCloud(); 
         renderTasksToDOM(); 
     }
 }
@@ -675,7 +680,7 @@ clearSearchBtn.addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     loadUsersData(); 
-    loadSharedTasks(); // Carrega dados (assíncrono)
+    loadSharedTasks(); 
     
     appContent.style.display = 'none';
     loginContent.style.display = 'flex';
