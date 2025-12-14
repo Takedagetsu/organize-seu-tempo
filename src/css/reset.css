@@ -1,0 +1,62 @@
+/*
+ * Um reset/normalize básico para garantir consistência de estilo
+ * entre diferentes navegadores e dispositivos.
+ */
+
+/* 1. Reset básico de margens e paddings */
+body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, dl, dd, ol, ul, figure, hr {
+    margin: 0;
+    padding: 0;
+}
+
+/* 2. Aplica border-box a todos os elementos para melhor controle de layout (OTIMIZAÇÃO) */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* 3. Ajustes de herança para elementos de formulário e mídia */
+input,
+button,
+textarea,
+select {
+    font: inherit; /* Garante que fontes customizadas se apliquem aos inputs */
+}
+
+/* 4. Remove o estilo de lista padrão (bolinhas/números) */
+ol, ul {
+    list-style: none;
+}
+
+/* 5. Estilo de link padrão (opcional, mas comum em resets) */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* 6. Garante que elementos de mídia sejam responsivos */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe {
+    display: block; /* Remove o espaço extra abaixo de imagens (display: inline) */
+    max-width: 100%;
+}
+
+/* 7. Remove o underline em links que envolvem imagens */
+a img {
+    border: none;
+}
+
+/* 8. Garante que o corpo da página utilize toda a altura da viewport */
+html, body {
+    height: 100%;
+}
+
+/* 9. Evita estouro de texto em elementos de bloco */
+p {
+    overflow-wrap: break-word;
+}

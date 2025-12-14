@@ -1,0 +1,30 @@
+/*
+** ==================================================================
+** 6. RESPONSIVIDADE
+** ==================================================================
+*/
+
+@media (max-width: 768px) { 
+    .header { flex-direction: column; gap: 10px; padding: 10px 15px; }
+    .header-navigation-group { width: 100%; justify-content: space-between; }
+    .main-navigation { flex-grow: 1; justify-content: flex-start; gap: 8px; }
+    .nav-button { padding: 6px 10px; font-size: 0.8rem; }
+    .header-title-group { align-items: center; } 
+}
+
+@media (max-width: 600px) {
+    .container { margin: 10px auto; padding: 0 10px; }
+    .header-navigation-group { flex-direction: column; gap: 10px; }
+    .main-navigation { flex-direction: column; gap: 8px; }
+    .nav-button { max-width: 100%; font-size: 0.9rem; }
+    #app-title { font-size: 2.2rem; }
+    
+    .task-input-group, #register-form { flex-direction: column; }
+    #task-text, #task-due-date, #task-priority, #add-task-btn,
+    #new-username, #new-password, #register-btn { width: 100%; min-width: 0; }
+    
+    /* CORREÇÃO: Removido o override que forçava as colunas de prioridade a empilhar. 
+       O #task-list agora se baseia apenas no 'auto-fit' para definir quantas colunas cabem. */
+    
+    .input-section, .task-list-section, .completed-tasks-section, .user-management-section { padding: 15px; }
+}
