@@ -1,174 +1,429 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAKEDA - Otimização de Tarefas</title>
+/*
+** ==================================================================
+** 1. CONFIGURAÇÕES GLOBAIS, RESET E VARIÁVEIS DE CORES (DARK MODE)
+** ==================================================================
+*/
+
+:root {
+    --primary-color: #f1f1f1;    
+    --secondary-color: #e91e63;  
+    --background-color: #1c1c1c; 
+    --card-background: #252525;  
     
-    <link rel="stylesheet" href="./src/css/style.css">
-    <link rel="stylesheet" href="./src/css/reset.css">
-    <link rel="stylesheet" href="./src/css/responsivo.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Gugi&display=swap" rel="stylesheet">
-</head>
-<body>
-
-    <header class="header">
-        <div class="header-title-group">
-            <h1 id="app-title">TAKEDA</h1>
-            <button id="user-logoff-button" class="logged-in-user-name" style="display: none;"></button>
-        </div>
-        
-        <div class="header-navigation-group">
-            
-            <div class="main-navigation">
-                <button class="nav-button active" data-content="add-task-content">Adicionar Tarefa</button>
-                <button class="nav-button" data-content="pending-tasks-content">Pendentes</button>
-                <button class="nav-button" data-content="completed-tasks-content">Concluídas</button>
-                
-                <button class="nav-button admin-only" data-content="manage-users-content" style="display: none;">Gerenciar</button>
-            </div>
-            
-        </div>
-    </header>
-
-    <main class="container">
-
-        <div id="login-content" class="auth-section active">
-            <section class="login-box">
-                <h2>Acessar TAKEDA</h2>
-                <form id="login-form">
-                    <label for="username">Usuário:</label>
-                    <input type="text" id="username" placeholder="Digite seu usuário" required>
-                    
-                    <label for="password">Senha:</label>
-                    <input type="password" id="password" placeholder="Digite sua senha" required>
-                    
-                    <button type="submit" id="login-btn">Entrar</button>
-                </form>
-                <p id="login-message" class="error-message"></p>
-            </section>
-        </div>
-
-        <div id="app-content" class="app-content-wrapper">
-            
-            <div class="main-content-area">
-                
-                <div id="add-task-content" class="content-section active">
-                    <section class="input-section">
-                        <h2>Insira os Detalhes da Nova Tarefa</h2>
-                        <div class="task-input-group">
-                            <input type="text" id="task-text" placeholder="Descreva sua nova tarefa...">
-                            <input type="date" id="task-due-date" title="Data de Vencimento">
-                            <select id="task-priority">
-                                <option value="low">Baixa</option>
-                                <option value="medium">Média</option>
-                                <option value="high">Alta</option>
-                            </select>
-                            <button id="add-task-btn">Adicionar</button>
-                        </div>
-                    </section>
-                </div>
-                
-                <div id="pending-tasks-content" class="content-section">
-                    <section class="task-list-section">
-                        <h2>Tarefas Pendentes</h2>
-                        <ul id="task-list">
-                            </ul>
-                    </section>
-                </div>
-
-                <div id="completed-tasks-content" class="content-section">
-                    <section class="completed-tasks-section">
-                        <h2>Tarefas Concluídas</h2>
-                        
-                        <form id="search-form" class="task-input-group">
-                            <input type="text" id="search-text" placeholder="Nome da tarefa..." title="Pesquisar por nome da tarefa" />
-                            <input type="date" id="search-date" title="Pesquisar por data de vencimento" />
-                            <select id="search-priority" title="Pesquisar por prioridade">
-                                <option value="">Todas as Prioridades</option>
-                                <option value="high">Alta</option>
-                                <option value="medium">Média</option>
-                                <option value="low">Baixa</option>
-                            </select>
-                            <button type="submit" id="search-btn">Buscar</button>
-                            <button type="button" id="clear-search-btn">Limpar</button>
-                        </form>
-
-                        <ul id="completed-list">
-                            </ul>
-                    </section>
-                </div>
-                
-                <div id="manage-users-content" class="content-section">
-                    <section class="user-management-section input-section">
-                        <h2>Cadastrar Novo Usuário</h2>
-                        <form id="register-form">
-                            <label for="new-username">Usuário:</label>
-                            <input type="text" id="new-username" placeholder="Novo nome de usuário" required>
-                            
-                            <label for="new-password">Senha:</label>
-                            <input type="password" id="new-password" placeholder="Defina a senha" required>
-                            
-                            <button type="submit" id="register-btn">Cadastrar Conta</button>
-                        </form>
-                        <p id="register-message" class="error-message"></p>
-                        
-                        <h3 style="margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 10px;">Usuários Existentes</h3>
-                        <ul id="user-list">
-                            </ul>
-                    </section>
-                </div>
-
-            </div>
-        </div>
-        
-    </main>
-
-    <div id="edit-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Editar: <span id="modal-task-title"></span></h3>
-            
-            <label for="modal-additional-info">Informações Adicionais:</label>
-            <textarea id="modal-additional-info" rows="4" placeholder="Adicione notas, links ou detalhes extras..."></textarea>
-            
-            <label for="modal-priority">Mudar Prioridade:</label>
-            <select id="modal-priority">
-                <option value="low">Baixa</option>
-                <option value="medium">Média</option>
-                <option value="high">Alta</option>
-            </select>
-
-            <div class="modal-actions">
-                <button id="save-edit-btn">Salvar Alterações</button>
-                <button id="close-modal-btn" class="secondary-btn">Cancelar</button>
-            </div>
-            <input type="hidden" id="modal-task-id"> 
-        </div>
-    </div>
-
-    <footer class="footer">
-        <p>&copy; 2025 TAKEDA Project. Otimize seu Tempo.</p>
-    </footer>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-    <script>
-      const firebaseConfig = {
-        apiKey: "BFgyYo8MfeGRKxUTBjXYdzqUgbgPFoGs2729Ou0BGbLUtVIqAI48UcoHAhstP6H24FxK5t_aiCDnYuegkhH9zGE", 
-        authDomain: "organize-seu-tempo.firebaseapp.com",
-        databaseURL: "https://organize-seu-tempo-default-rtdb.firebaseio.com",
-        projectId: "organize-seu-tempo",
-        // Adicione outras chaves (storageBucket, appId) se necessário
-      };
-      
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
-    </script>
+    --success-color: #4caf50;    
+    --high-priority-color: #e91e63; 
+    --medium-priority-color: #ff9800; 
+    --low-priority-color: #9c27b0;  
     
-    <script src="./src/js/scripit.js"></script>
-</body>
-</html>
+    /* Cores usadas para as Colunas de Prioridade */
+    --danger-color: #e74c3c; 
+    --warning-color: #f39c12;
+    --info-color: #3498db; 
+
+    --font-base: 'Arial', sans-serif;
+    --font-title: 'Gugi', sans-serif;
+}
+
+/* Reset Básico */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* BODY: Fundo de Imagem (50% de Tamanho) e Layout Flexbox */
+body {
+    font-family: var(--font-base);
+    line-height: 1.6;
+    color: var(--primary-color);
+    
+    background-image: url('../imagens/logo.png'); 
+    background-size: 50%; /* Imagem reduzida */
+    background-repeat: no-repeat; 
+    background-attachment: fixed; 
+    background-position: center center;
+    background-color: var(--background-color); 
+    
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column; 
+    padding-bottom: 0; 
+}
+
+
+/*
+** ==================================================================
+** 2. LAYOUT GERAL E HEADER (LARGURA TOTAL E DESCENTRALIZADO)
+** ==================================================================
+*/
+
+.container {
+    max-width: 100%; 
+    margin: 0; 
+    padding: 20px 30px; 
+    
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    flex-grow: 1; 
+}
+
+/* Cabeçalho (Header) */
+.header {
+    background-color: var(--card-background);
+    color: var(--primary-color);
+    padding: 15px 30px; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between; 
+    align-items: center; 
+}
+
+/* Grupo para empilhar o Título e o Nome do Usuário */
+.header-title-group {
+    display: flex;
+    flex-direction: column; 
+    align-items: flex-start; 
+    flex-shrink: 0;
+}
+
+#app-title {
+    font-family: var(--font-title);
+    font-weight: 700;
+    font-size: 3rem;
+    letter-spacing: 2px;
+    margin-bottom: 0px; 
+    text-transform: uppercase;
+}
+
+/* Botão de Logoff Rápido (Display do nome do usuário) */
+.logged-in-user-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--secondary-color); 
+    margin-top: 5px;
+    margin-bottom: 0;
+    cursor: pointer;
+    background: none; 
+    border: none;
+    text-align: left;
+    padding: 0;
+    text-decoration: underline;
+    text-decoration-color: #555;
+}
+
+.logged-in-user-name:hover {
+    color: #ff4081; 
+    text-decoration-color: var(--secondary-color);
+}
+
+/* Container que envolve Navegação Principal */
+.header-navigation-group {
+    display: flex;
+    align-items: center;
+    gap: 30px; 
+    flex-grow: 1; 
+    justify-content: flex-end; 
+    margin-left: 30px; 
+}
+
+
+/*
+** ==================================================================
+** 3. NAVEGAÇÃO, CONTEÚDO E INPUTS
+** ==================================================================
+*/
+
+/* Navegação Principal (Botões no Header) */
+.main-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    flex-shrink: 0; 
+}
+
+.nav-button {
+    background-color: #3a3a3a; 
+    color: var(--primary-color);
+    padding: 8px 15px; 
+    border: none;
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background-color 0.3s, color 0.3s;
+    flex-grow: 0;
+    max-width: 150px;
+}
+
+.nav-button:hover { background-color: #4a4a4a; }
+.nav-button.active {
+    background-color: var(--secondary-color); 
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); 
+}
+
+/* Botão Admin (Gerenciar) */
+.admin-only { background-color: var(--low-priority-color); }
+.admin-only:hover { background-color: #792589; }
+
+
+.content-section { display: none; padding: 0; }
+.content-section.active { display: block; }
+
+/* Estilos de Card e Inputs */
+#add-task-content .input-section,
+#pending-tasks-content .task-list-section,
+#completed-tasks-content .completed-tasks-section,
+.user-management-section {
+    background-color: var(--card-background);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.input-section h2, 
+.task-list-section h2,
+.completed-tasks-section h2,
+.user-management-section h2 {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.task-input-group, #register-form, #search-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+
+#task-text, #task-due-date, #task-priority,
+#new-username, #new-password, #search-text, #search-date, #search-priority { 
+    padding: 10px 15px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    font-size: 1rem;
+    background-color: #333; 
+    color: var(--primary-color);
+    flex-grow: 1; 
+    min-width: 130px;
+}
+#task-text { flex-grow: 2; }
+#search-text { flex-grow: 2; }
+
+
+/* Estilos de Gerenciamento de Usuário */
+#user-list { list-style: none; padding: 10px 0; border-top: 1px solid #444; }
+#user-list li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px dashed #333; color: #ccc;
+}
+.user-actions { display: flex; gap: 8px; }
+.edit-user-btn { background-color: var(--secondary-color); color: white; }
+.delete-user-btn { background-color: var(--high-priority-color); color: white; }
+li[data-username="TAKEDA"] .user-actions,
+li[data-current-user="true"] .user-actions { opacity: 0.4; pointer-events: none; }
+
+
+/*
+** ==================================================================
+** 4. LISTAS DE TAREFAS (COLUNAS POR PRIORIDADE)
+** ==================================================================
+*/
+
+/* Container Principal das Tarefas Pendentes (UL#task-list) */
+#task-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 20px;
+    align-items: start; 
+}
+
+/* Coluna de Prioridade (Agrupamento de tarefas) */
+.priority-column {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.priority-column-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #444;
+}
+
+/* Cores de Borda e Título para as Colunas */
+.priority-column[data-priority="high"] .priority-column-title {
+    color: var(--danger-color);
+    border-bottom-color: var(--danger-color);
+}
+.priority-column[data-priority="medium"] .priority-column-title {
+    color: var(--warning-color);
+    border-bottom-color: var(--warning-color);
+}
+.priority-column[data-priority="low"] .priority-column-title {
+    color: var(--info-color);
+    border-bottom-color: var(--info-color);
+}
+
+/* Container de Tarefas Dentro da Coluna */
+.priority-task-list {
+    list-style: none;
+    padding: 0;
+}
+
+/* Item da Tarefa (O CARD individual) */
+.task-item {
+    background-color: #383838; 
+    border-radius: 6px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-left: 6px solid #444; 
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.task-item:hover { background-color: #444; }
+
+/* Cores de Borda por Prioridade do Card */
+.task-item.high { border-left-color: var(--danger-color); }
+.task-item.medium { border-left-color: var(--warning-color); }
+.task-item.low { border-left-color: var(--info-color); }
+
+/* Conteúdo do Card */
+.task-text-clickable {
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+.task-details {
+    font-size: 0.8rem;
+    color: #bbb;
+    margin-bottom: 10px;
+}
+
+.task-details p { margin: 3px 0; }
+
+/* Controles de Ação */
+.task-controls {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+    margin-top: 5px; 
+    border-top: 1px dashed #555;
+    padding-top: 10px;
+}
+
+/* Tarefas Concluídas (em lista simples) */
+#completed-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+    display: block; 
+}
+
+.task-item.completed {
+    opacity: 0.7;
+    background-color: #333; 
+    border-left-color: var(--success-color);
+    text-decoration: none; 
+}
+
+.task-item.completed .task-text-clickable {
+    text-decoration: line-through;
+    color: #999;
+}
+.task-item.completed .task-details {
+    color: #777;
+}
+
+/* Auditoria (Nome do modificador) */
+.task-item > span {
+    display: block;
+    color: #999;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+
+/*
+** ==================================================================
+** 5. MODAL, AUTENTICAÇÃO E RODAPÉ
+** ==================================================================
+*/
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+}
+
+.modal-content {
+    background-color: var(--card-background);
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    color: var(--primary-color);
+    z-index: 1001; 
+}
+
+.footer {
+    background-color: var(--card-background);
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    padding: 15px 30px; 
+    margin-top: 0; 
+    width: 100%; 
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/*
+** ==================================================================
+** 6. RESPONSIVIDADE
+** ==================================================================
+*/
+
+@media (max-width: 768px) { 
+    .header { flex-direction: column; gap: 10px; padding: 10px 15px; }
+    .header-navigation-group { width: 100%; justify-content: space-between; }
+    .main-navigation { flex-grow: 1; justify-content: flex-start; gap: 8px; }
+    .nav-button { padding: 6px 10px; font-size: 0.8rem; }
+    .header-title-group { align-items: center; } 
+}
+
+@media (max-width: 600px) {
+    .container { margin: 10px auto; padding: 0 10px; }
+    .header-navigation-group { flex-direction: column; gap: 10px; }
+    .main-navigation { flex-direction: column; gap: 8px; }
+    .nav-button { max-width: 100%; font-size: 0.9rem; }
+    #app-title { font-size: 2.2rem; }
+    
+    .task-input-group, #register-form { flex-direction: column; }
+    #task-text, #task-due-date, #task-priority, #add-task-btn,
+    #new-username, #new-password, #register-btn { width: 100%; min-width: 0; }
+    
+    .input-section, .task-list-section, .completed-tasks-section, .user-management-section { padding: 15px; }
+}
