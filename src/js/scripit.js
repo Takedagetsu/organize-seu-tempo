@@ -1,44 +1,118 @@
 // ==================================================================
-// 1. DADOS E REFERÊNCIAS DOS ELEMENTOS DO DOM
+// 1. CONFIGURAÇÃO DE SERVIÇO NA NUVEM (PASSO CRÍTICO)
 // ==================================================================
-let tasks = []; // Array principal que conterá TODAS as tarefas COMPARTILHADAS
+
+/*
+ * ATENÇÃO: PARA QUE A EDIÇÃO FUNCIONE EM MÚLTIPLOS DISPOSITIVOS,
+ * ESTE PROJETO PRECISA INTERAGIR COM UM BANCO DE DADOS NA NUVEM (Ex: Firebase).
+ * As funções de persistência (loadSharedTasks / saveSharedTasks) foram modificadas
+ * para usar placeholders de integração assíncrona.
+ *
+ * PARA CONTINUAR:
+ * 1. Crie um projeto no Firebase (ou Supabase).
+ * 2. Configure a biblioteca Firebase no seu HTML (via CDN) ou Bundle.
+ * 3. Substitua o código dentro de getTasksFromCloud, saveTasksToCloud e loadUsersData.
+ */
+
+// Placeholder para o Array de Tarefas Compartilhadas
+let tasks = []; 
 let taskIdCounter = 0; 
 let loggedInUser = null; 
-let users = {}; // Objeto que contém os usuários para autenticação
+let users = {}; 
 
-// Constantes de persistência
-const SHARED_TASKS_KEY = 'takedaSharedTasks';
+// Constantes de persistência local (Mantidas apenas para Credenciais de Usuário)
 const USERS_DATA_KEY = 'takedaUsersData'; 
 
-// Elementos de Interface
+// ==================================================================
+// 2. FUNÇÕES DE PERSISTÊNCIA NA NUVEM (PLACEHOLDERS)
+// ==================================================================
+
+/**
+ * [PLACEHOLDER] Salva as tarefas no servidor (Simula uma API PUT).
+ * ATENÇÃO: Substitua este código pela lógica de escrita do Firebase/API.
+ */
+async function saveTasksToCloud() {
+    console.log("Simulando: Enviando dados para a Nuvem...", tasks);
+    
+    // --- LÓGICA TEMPORÁRIA: Salvando no LocalStorage para evitar perda ---
+    localStorage.setItem('SHARED_TASKS_CLOUD_SIMULATOR', JSON.stringify(tasks));
+    // --- FIM DA LÓGICA TEMPORÁRIA ---
+
+    // Exemplo de como ficaria a lógica com uma API real:
+    // await fetch('/api/tasks', { method: 'PUT', body: JSON.stringify(tasks) });
+}
+
+/**
+ * [PLACEHOLDER] Carrega as tarefas do servidor (Simula uma API GET).
+ * ATENÇÃO: Substitua este código pela lógica de leitura do Firebase/API.
+ */
+async function getTasksFromCloud() {
+    console.log("Simulando: Baixando dados da Nuvem...");
+    
+    // --- LÓGICA TEMPORÁRIA: Carregando do LocalStorage ---
+    const storedTasks = localStorage.getItem('SHARED_TASKS_CLOUD_SIMULATOR');
+    return storedTasks ? JSON.parse(storedTasks) : [];
+    // --- FIM DA LÓGICA TEMPORÁRIA ---
+}
+
+// ==================================================================
+// 3. LÓGICA DE CARREGAMENTO E SINCRONIZAÇÃO (AJUSTADA PARA ASYNC)
+// ==================================================================
+
+async function loadSharedTasks() {
+    tasks = await getTasksFromCloud(); // Chamada assíncrona
+    
+    // Calcula o ID máximo após carregar
+    if (tasks.length > 0) {
+        const maxId = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
+        taskIdCounter = maxId;
+    } else {
+        taskIdCounter = 0;
+    }
+    renderTasksToDOM(); 
+}
+
+// O salvamento das credenciais de usuário (local) não precisa ser async:
+function saveUsersData() {
+    localStorage.setItem(USERS_DATA_KEY, JSON.stringify(users));
+}
+
+function loadUsersData() {
+    const storedData = localStorage.getItem(USERS_DATA_KEY);
+    
+    if (storedData) {
+        users = JSON.parse(storedData);
+    } else {
+        users = { 'TAKEDA': { password: '147369' } }; 
+        saveUsersData();
+    }
+}
+
+
+// ==================================================================
+// 4. REFERÊNCIAS E FUNÇÕES DE INTERFACE (Mantidas)
+// ==================================================================
+
+// Elementos de Interface (omitidos por brevidade - Mantidos da versão anterior)
 const loginContent = document.getElementById('login-content');
 const appContent = document.getElementById('app-content');
 const loginForm = document.getElementById('login-form');
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
 const loginMessage = document.getElementById('login-message');
-
 const userLogoffButton = document.getElementById('user-logoff-button'); 
 const loggedInDisplayName = userLogoffButton; 
-
-// Elementos Admin/Cadastro
 const adminButton = document.querySelector('.admin-only'); 
 const registerForm = document.getElementById('register-form');
 const newUsernameInput = document.getElementById('new-username');
 const newPasswordInput = document.getElementById('new-password');
 const registerMessage = document.getElementById('register-message');
 const userListElement = document.getElementById('user-list');
-
-// Elemento que contém a navegação principal (no Header)
 const headerNavigationGroup = document.querySelector('.header-navigation-group');
-
-// Referências de Navegação e Conteúdo
 const navButtons = document.querySelectorAll('.nav-button');
 const contentSections = document.querySelectorAll('.content-section');
 const taskList = document.getElementById('task-list'); 
 const completedList = document.getElementById('completed-list'); 
-
-// Inputs de Adição/Modal
 const taskText = document.getElementById('task-text');
 const taskDueDate = document.getElementById('task-due-date');
 const taskPriority = document.getElementById('task-priority');
@@ -50,8 +124,6 @@ const modalPriority = document.getElementById('modal-priority');
 const modalTaskId = document.getElementById('modal-task-id');
 const saveEditBtn = document.getElementById('save-edit-btn');
 const closeModalBtn = document.getElementById('close-modal-btn');
-
-// Elementos de Pesquisa
 const searchForm = document.getElementById('search-form');
 const searchText = document.getElementById('search-text');
 const searchDate = document.getElementById('search-date');
@@ -60,60 +132,17 @@ const clearSearchBtn = document.getElementById('clear-search-btn');
 
 
 // ==================================================================
-// 2. LÓGICA DE PERSISTÊNCIA E RENDERIZAÇÃO (Colunas de Prioridade)
+// 5. FUNÇÕES DE RENDERIZAÇÃO E UTILS (Mantidas)
 // ==================================================================
 
-function saveSharedTasks() {
-    localStorage.setItem(SHARED_TASKS_KEY, JSON.stringify(tasks));
-}
-
-function loadSharedTasks() {
-    const storedTasks = localStorage.getItem(SHARED_TASKS_KEY);
-    if (storedTasks) {
-        tasks = JSON.parse(storedTasks);
-        if (tasks.length > 0) {
-            const maxId = tasks.reduce((max, task) => task.id > max ? task.id : max, 0);
-            taskIdCounter = maxId;
-        }
-    } else {
-        tasks = [];
-    }
-    renderTasksToDOM(); 
-}
-
-function saveUsersData() {
-    localStorage.setItem(USERS_DATA_KEY, JSON.stringify(users));
-}
-
-function loadUsersData() {
-    const storedData = localStorage.getItem(USERS_DATA_KEY);
-    
-    if (storedData) {
-        users = JSON.parse(storedData);
-    } else {
-        // Inicializa o Usuário Principal
-        users = {
-            'TAKEDA': { password: '147369' } 
-        };
-        saveUsersData();
-    }
-}
-
-/**
- * Função principal para renderizar tarefas pendentes (em colunas) e chamar a renderização
- * das tarefas concluídas.
- */
 function renderTasksToDOM() {
     
-    // Define a ordem de prioridade
     const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
 
-    // 1. Pré-processamento: Separa e ordena tarefas pendentes
     const sortedPendingTasks = tasks
         .filter(task => !task.isCompleted)
         .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]); 
 
-    // Agrupa tarefas por Prioridade
     const groupedTasks = sortedPendingTasks.reduce((acc, task) => {
         const priority = task.priority; 
         if (!acc[priority]) {
@@ -123,11 +152,9 @@ function renderTasksToDOM() {
         return acc;
     }, {});
     
-    // 2. Renderização das Tarefas Pendentes em Colunas
     taskList.innerHTML = ''; 
     completedList.innerHTML = ''; 
 
-    // Itera sobre as prioridades na ordem correta
     const priorityKeys = Object.keys(priorityOrder).sort((a, b) => priorityOrder[a] - priorityOrder[b]);
     
     priorityKeys.forEach(priorityKey => {
@@ -157,13 +184,9 @@ function renderTasksToDOM() {
         }
     });
 
-    // 3. Renderiza as tarefas concluídas (sem filtro ativo, apenas a lista completa)
     renderCompletedTasks(); 
 }
 
-/**
- * Função que aplica a pesquisa e renderiza as tarefas concluídas.
- */
 function renderCompletedTasks() {
     const allCompletedTasks = tasks.filter(task => task.isCompleted);
     let filteredTasks = allCompletedTasks;
@@ -172,7 +195,6 @@ function renderCompletedTasks() {
     const dateFilter = searchDate.value;
     const priorityFilter = searchPriority.value;
     
-    // Aplica filtros se houver valor
     if (textFilter) {
         filteredTasks = filteredTasks.filter(task => 
             task.text.toLowerCase().includes(textFilter)
@@ -180,18 +202,14 @@ function renderCompletedTasks() {
     }
 
     if (dateFilter) {
-        filteredTasks = filteredTasks.filter(task => 
-            task.date === dateFilter // Comparação exata da data de vencimento
-        );
+        filteredTasks = filteredTasks.filter(task => task.date === dateFilter);
     }
 
     if (priorityFilter) {
-        filteredTasks = filteredTasks.filter(task => 
-            task.priority === priorityFilter
-        );
+        filteredTasks = filteredTasks.filter(task => task.priority === priorityFilter);
     }
 
-    completedList.innerHTML = ''; // Limpa a lista antes de renderizar
+    completedList.innerHTML = ''; 
 
     if (filteredTasks.length === 0 && (textFilter || dateFilter || priorityFilter)) {
         const message = document.createElement('p');
@@ -201,15 +219,11 @@ function renderCompletedTasks() {
         return;
     }
     
-    // Renderiza as tarefas filtradas
     filteredTasks.forEach(task => {
         completedList.appendChild(createTaskElement(task));
     });
 }
 
-/**
- * Função para criar o elemento da tarefa no formato de CARD.
- */
 function createTaskElement(taskData) {
     const { id, text, date, priority, isCompleted, lastModifiedBy, additionalInfo } = taskData;
     
@@ -217,13 +231,11 @@ function createTaskElement(taskData) {
     li.id = `task-${id}`; 
     li.className = `task-item ${priority} ${isCompleted ? 'completed' : ''}`;
     
-    // Task Text (The clickable part)
     const textSpan = document.createElement('span');
     textSpan.className = 'task-text-clickable';
     textSpan.textContent = text;
     textSpan.addEventListener('click', () => openEditModal(id));
     
-    // Details (Vencimento e Auditoria)
     const detailsDiv = document.createElement('div');
     detailsDiv.className = 'task-details';
     
@@ -237,15 +249,12 @@ function createTaskElement(taskData) {
         <p class="task-modified">Modificado por: ${lastModifiedBy || 'N/A'} ${infoDisplay}</p>
     `;
     
-    // Controles (Botões)
     const controlsDiv = document.createElement('div');
     controlsDiv.className = 'task-controls';
     
     const isPrincipalAdmin = (loggedInUser === 'TAKEDA');
 
     if (!isCompleted) {
-        // TAREFA PENDENTE: Botões Concluir e Excluir
-        
         const completeBtn = document.createElement('button');
         completeBtn.className = 'complete-btn';
         completeBtn.textContent = 'Concluir';
@@ -259,15 +268,12 @@ function createTaskElement(taskData) {
         controlsDiv.appendChild(deleteBtn);
 
     } else {
-        // TAREFA CONCLUÍDA: Botão Reverter E botão Excluir (somente se for Admin)
-        
         const revertBtn = document.createElement('button');
         revertBtn.className = 'complete-btn'; 
         revertBtn.textContent = 'Reverter';
         revertBtn.addEventListener('click', uncompleteTask); 
         controlsDiv.appendChild(revertBtn);
         
-        // REGRA CHAVE: Exibir Excluir APENAS se for o Admin (TAKEDA)
         if (isPrincipalAdmin) {
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -277,7 +283,6 @@ function createTaskElement(taskData) {
         }
     }
     
-    // Monta o Card
     li.appendChild(textSpan);
     li.appendChild(detailsDiv);
     li.appendChild(controlsDiv); 
@@ -287,7 +292,7 @@ function createTaskElement(taskData) {
 
 
 // ==================================================================
-// 3. LÓGICA DE CADASTRO E ADMIN
+// 6. LÓGICA DE CADASTRO E ADMIN
 // ==================================================================
 
 function handleRegistration(event) {
@@ -385,7 +390,7 @@ function openUserEditModal(username) {
     closeModalBtn.onclick = resetAndCloseUserModal;
 }
 
-function saveUserEdit() {
+async function saveUserEdit() {
     const username = document.getElementById('modal-task-id').value;
     const newPassword = document.getElementById('modal-additional-info').value.trim();
 
@@ -409,8 +414,9 @@ function deleteUser(username) {
         delete users[username];
         saveUsersData();
         
+        // Remove as tarefas dele do array compartilhado e salva na nuvem
         tasks = tasks.filter(task => task.lastModifiedBy !== username);
-        saveSharedTasks();
+        saveTasksToCloud(); 
         
         renderUserList();
         renderTasksToDOM(); 
@@ -430,7 +436,7 @@ function resetAndCloseUserModal() {
 
 
 // ==================================================================
-// 4. FUNÇÕES DE AUTENTICAÇÃO
+// 7. FUNÇÕES DE AUTENTICAÇÃO E CRUD (AJUSTADAS PARA ASYNC)
 // ==================================================================
 
 function handleLogin(event) {
@@ -460,7 +466,7 @@ function handleLogin(event) {
     loggedInDisplayName.textContent = `${loggedInUser} (Sair)`;
     loggedInDisplayName.style.display = 'block';
 
-    loadSharedTasks(); 
+    loadSharedTasks(); // Carrega dados da "nuvem"
     
     checkAdminVisibility();
     renderUserList();
@@ -486,11 +492,6 @@ function handleLogoff() {
     passwordInput.value = '';
 }
 
-
-// ==================================================================
-// 5. FUNÇÕES DE NAVEGAÇÃO, MODAL E CRUD (AUDITORIA)
-// ==================================================================
-
 function changeContent(targetContentId) {
     navButtons.forEach(btn => btn.classList.remove('active'));
     contentSections.forEach(content => content.classList.remove('active'));
@@ -514,7 +515,6 @@ function openEditModal(taskId) {
 
     resetAndCloseUserModal(); 
 
-    // Se for uma tarefa concluída, não permitir edição de prioridade
     if (task.isCompleted) {
         document.getElementById('modal-priority').style.display = 'none'; 
         document.querySelector('label[for="modal-priority"]').style.display = 'none';
@@ -535,7 +535,7 @@ function closeEditModal() {
     editModal.style.display = 'none';
 }
 
-function saveEdit() {
+async function saveEdit() {
     const taskId = parseInt(modalTaskId.value);
     const newAdditionalInfo = modalAdditionalInfo.value.trim();
     const newPriority = modalPriority.value;
@@ -543,10 +543,8 @@ function saveEdit() {
     const taskIndex = tasks.findIndex(t => t.id === taskId);
     if (taskIndex === -1) return;
 
-    // REGISTRO DE AUDITORIA
     tasks[taskIndex].additionalInfo = newAdditionalInfo;
     
-    // Só atualiza a prioridade se a tarefa não estiver concluída
     if (!tasks[taskIndex].isCompleted) {
         tasks[taskIndex].priority = newPriority;
     }
@@ -554,13 +552,13 @@ function saveEdit() {
     tasks[taskIndex].lastModifiedBy = loggedInUser; 
     tasks[taskIndex].lastModifiedDate = new Date().toLocaleString('pt-BR');
 
-    saveSharedTasks(); 
+    await saveTasksToCloud(); // Sincroniza com a nuvem
     renderTasksToDOM(); 
     
     closeEditModal();
 }
 
-function addTask() {
+async function addTask() {
     const text = taskText.value.trim();
     const date = taskDueDate.value;
     const priority = taskPriority.value;
@@ -585,7 +583,7 @@ function addTask() {
 
     tasks.push(newTaskData);
 
-    saveSharedTasks(); 
+    await saveTasksToCloud(); // Sincroniza com a nuvem
     renderTasksToDOM(); 
 
     taskText.value = '';
@@ -595,7 +593,7 @@ function addTask() {
     changeContent('pending-tasks-content');
 }
 
-function completeTask(event) {
+async function completeTask(event) {
     const taskId = parseInt(event.target.closest('.task-item').id.replace('task-', ''));
     
     const task = tasks.find(t => t.id === taskId);
@@ -605,25 +603,25 @@ function completeTask(event) {
         task.lastModifiedDate = new Date().toLocaleString('pt-BR');
     }
     
-    saveSharedTasks(); 
+    await saveTasksToCloud(); // Sincroniza com a nuvem
     renderTasksToDOM(); 
 }
 
-function uncompleteTask(event) {
+async function uncompleteTask(event) {
     const taskId = parseInt(event.target.closest('.task-item').id.replace('task-', ''));
     
     const task = tasks.find(t => t.id === taskId);
     if (task) {
         task.isCompleted = false;
-        task.lastModifiedBy = loggedInUser; // Auditoria da reversão
+        task.lastModifiedBy = loggedInUser;
         task.lastModifiedDate = new Date().toLocaleString('pt-BR');
     }
     
-    saveSharedTasks(); 
+    await saveTasksToCloud(); // Sincroniza com a nuvem
     renderTasksToDOM(); 
 }
 
-function deleteTask(event) {
+async function deleteTask(event) {
     const taskItem = event.target.closest('.task-item');
     const taskId = parseInt(taskItem.id.replace('task-', ''));
     const task = tasks.find(t => t.id === taskId);
@@ -639,24 +637,20 @@ function deleteTask(event) {
     if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
         tasks = tasks.filter(t => t.id !== taskId);
         
-        saveSharedTasks(); 
+        await saveTasksToCloud(); // Sincroniza com a nuvem
         renderTasksToDOM(); 
     }
 }
 
 
 // ==================================================================
-// 6. EVENT LISTENERS GERAIS E INICIALIZAÇÃO
+// 8. EVENT LISTENERS GERAIS E INICIALIZAÇÃO
 // ==================================================================
 
-// Listener de Login e Logoff
 loginForm.addEventListener('submit', handleLogin);
 userLogoffButton.addEventListener('click', handleLogoff); 
-
-// Listener de Cadastro
 registerForm.addEventListener('submit', handleRegistration);
 
-// Listeners de Navegação (Troca de Seções)
 navButtons.forEach(button => {
     button.addEventListener('click', () => {
         const targetContentId = button.getAttribute('data-content');
@@ -664,14 +658,10 @@ navButtons.forEach(button => {
     });
 });
 
-// Listener de Adicionar Tarefa
 addTaskBtn.addEventListener('click', addTask);
-
-// Listeners do Modal
 saveEditBtn.onclick = saveEdit;
 closeModalBtn.onclick = closeEditModal;
 
-// Listeners de Pesquisa de Tarefas Concluídas
 searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     renderCompletedTasks(); 
@@ -683,10 +673,9 @@ clearSearchBtn.addEventListener('click', () => {
 });
 
 
-// Inicialização: Carrega dados globais ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
     loadUsersData(); 
-    loadSharedTasks(); 
+    loadSharedTasks(); // Carrega dados (assíncrono)
     
     appContent.style.display = 'none';
     loginContent.style.display = 'flex';
