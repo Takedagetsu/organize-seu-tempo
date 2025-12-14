@@ -81,25 +81,26 @@
                 </div>
 
                 <div id="completed-tasks-content" class="content-section">
-    <section class="completed-tasks-section">
-        <h2>Tarefas Concluídas</h2>
-        
-        <form id="search-form" class="task-input-group">
-            <input type="text" id="search-text" placeholder="Nome da tarefa..." title="Pesquisar por nome da tarefa" />
-            <input type="date" id="search-date" title="Pesquisar por data de vencimento" />
-            <select id="search-priority" title="Pesquisar por prioridade">
-                <option value="">Todas as Prioridades</option>
-                <option value="high">Alta</option>
-                <option value="medium">Média</option>
-                <option value="low">Baixa</option>
-            </select>
-            <button type="submit" id="search-btn">Buscar</button>
-            <button type="button" id="clear-search-btn">Limpar</button>
-        </form>
-        <ul id="completed-list">
-            </ul>
-    </section>
-</div>
+                    <section class="completed-tasks-section">
+                        <h2>Tarefas Concluídas</h2>
+                        
+                        <form id="search-form" class="task-input-group">
+                            <input type="text" id="search-text" placeholder="Nome da tarefa..." title="Pesquisar por nome da tarefa" />
+                            <input type="date" id="search-date" title="Pesquisar por data de vencimento" />
+                            <select id="search-priority" title="Pesquisar por prioridade">
+                                <option value="">Todas as Prioridades</option>
+                                <option value="high">Alta</option>
+                                <option value="medium">Média</option>
+                                <option value="low">Baixa</option>
+                            </select>
+                            <button type="submit" id="search-btn">Buscar</button>
+                            <button type="button" id="clear-search-btn">Limpar</button>
+                        </form>
+
+                        <ul id="completed-list">
+                            </ul>
+                    </section>
+                </div>
                 
                 <div id="manage-users-content" class="content-section">
                     <section class="user-management-section input-section">
@@ -152,6 +153,22 @@
         <p>&copy; 2025 TAKEDA Project. Otimize seu Tempo.</p>
     </footer>
 
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "BFgyYo8MfeGRKxUTBjXYdzqUgbgPFoGs2729Ou0BGbLUtVIqAI48UcoHAhstP6H24FxK5t_aiCDnYuegkhH9zGE", 
+        authDomain: "organize-seu-tempo.firebaseapp.com",
+        databaseURL: "https://organize-seu-tempo-default-rtdb.firebaseio.com",
+        projectId: "organize-seu-tempo",
+        // Adicione outras chaves (storageBucket, appId) se necessário
+      };
+      
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+    </script>
+    
     <script src="./src/js/scripit.js"></script>
 </body>
 </html>
